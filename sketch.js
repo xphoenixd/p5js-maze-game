@@ -236,56 +236,35 @@ const dfs = {
 };
 
 const prims = {
-  cells: [],
+  walls: [],
+  addWalls: function (cell) {
+    const neighbors = getNeighbours(cell, "unvisited");
+    for (const neighbor of neighbors) {
+      this.walls.push({
+        cell,
+        neighbor: neighbor.cell,
+        direction: neighbor.direction,
+      });
+    }
+  },
   run: function () {
-    const cell = maze.randomCell();
-    cell.visited = true;
-    this.cells.push(cell);
+    const startCell = maze.randomCell();
+    startCell.visited = true;
 
-    while (this.cells.length) {
-      const randomIndex = Math.floor(Math.random() * this.cells.length);
-      const randomCell = this.cells[randomIndex];
+    this.addWalls(startCell);
 
-      const possibleRandomCellWalls = randomCell.walls.filter((wall) =>
-        randomCell.possibleDirections().includes(wall)
-      );
+    while (this.walls.length) {
+      const randomIndex = Math.floor(Math.random() * this.walls.length);
+      const randomWall = this.walls[randomIndex];
+      const { cell, neighbor, direction } = randomWall;
 
-      if (possibleRandomCellWalls.length === 0) {
-        // Remove the processed cell when no more walls can be added
-        this.cells.splice(randomIndex, 1);
-
-        // Check if there are no cells left in the array, and if so, exit the loop
-        if (this.cells.length === 0) {
-          break;
-        }
-        continue;
+      if (!neighbor.visited) {
+        neighbor.visited = true;
+        maze.connectCells(cell, neighbor, direction);
+        this.addWalls(neighbor);
       }
 
-      const randomWall =
-        possibleRandomCellWalls[
-          Math.floor(Math.random() * possibleRandomCellWalls.length)
-        ];
-
-      let nextCellX = randomCell.pos.x;
-      let nextCellY = randomCell.pos.y;
-      if (randomWall == "N") nextCellY--;
-      if (randomWall == "E") nextCellX++;
-      if (randomWall == "S") nextCellY++;
-      if (randomWall == "W") nextCellX--;
-
-      const nextCell = maze.getCell(nextCellX, nextCellY);
-      if (
-        (randomCell.visited && !nextCell.visited) ||
-        (!randomCell.visited && nextCell.visited)
-      ) {
-        maze.connectCells(randomCell, nextCell, randomWall);
-        this.cells.push(nextCell);
-        nextCell.visited = true; // Mark the nextCell as visited here
-        // Check if the current cell has no walls left, and if so, remove it from the array
-        if (randomCell.walls.length == 0) {
-          this.cells.splice(randomIndex, 1);
-        }
-      } else return;
+      this.walls.splice(randomIndex, 1);
     }
   },
 };
