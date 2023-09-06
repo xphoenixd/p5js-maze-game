@@ -415,6 +415,12 @@ generate = () => {
     ab.run();
   }
   player.pos = startCell.pos;
+  firstMove = false;
+  timerStarted = false;
+  timerFinished = false;
+  let startTime;
+  let endTime;
+  let totalTime;
 };
 
 keyPressed = () => {
