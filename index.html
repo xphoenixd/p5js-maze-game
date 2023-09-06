@@ -14,7 +14,7 @@
   </head>
   <body>
     <main>
-      <div id="controls" class="card card-body" style="margin-bottom: 20px">
+      <div id="controls" class="card card-body" style="margin-bottom: 20px; top:0;">
         <button id="generate" onclick="generate()" class="btn btn-primary">
           Generate New Maze
         </button>
@@ -23,33 +23,35 @@
             <label
               for="width"
               class="position-absolute"
-              style="margin-left: 10px"
             >
               <span class="h6 small bg-white text-muted px-1">Maze Width</span>
             </label>
-            <input type="text" id="width" class="form-control mt-3" value="8" />
+            <input type="number" id="width" class="form-control mt-4" value="8" max="50" onkeyup="if(this.value > 50) this.value = 50;" />
           </div>
           <div class="col">
             <label
               for="height"
               class="position-absolute"
-              style="margin-left: 10px"
             >
               <span class="h6 small bg-white text-muted px-1">Maze Height</span>
             </label>
             <input
-              type="text"
+              type="number"
               id="height"
-              class="form-control mt-3"
+              class="form-control mt-4"
               value="8"
+              max="50"
+              onkeyup="if(this.value > 50) this.value = 50;" 
             />
           </div>
         </div>
         <div class="form-group">
-          <label for="algorithm">Maze Generation Algorithm</label>
-          <select id="algorithm" class="form-control">
+          <label for="algorithm">
+            <span class="h6 small bg-white text-muted px-1">Maze Generation Algorithm</span>
+          </label>
+          <select id="algorithm" class="form-select">
             <option value="huntandkill">Hunt-and-Kill</option>
-            <option value="prim">Prim's Algorithm</option>
+            <option value="dfs">Depth-First-Search</option>
             <option value="kruskal">Kruskal's Algorithm</option>
           </select>
         </div>

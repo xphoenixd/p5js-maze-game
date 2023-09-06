@@ -5,3 +5,8 @@ body {
   height: 100vh;
   margin: 0;
 }
+main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
