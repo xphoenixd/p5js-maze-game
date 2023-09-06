@@ -314,10 +314,75 @@ let totalTime;
 
 let startCell = maze.randomCell(0);
 startCell.flags.push("START");
+startCell.visited = true;
 startCell.colour = "#5fd963";
 let finishCell = maze.randomCell(h - 1);
 finishCell.flags.push("FINISH");
+finishCell.visited = true;
 finishCell.colour = "#d95f5f";
+
+const solver = {
+  stack: [],
+  cell: startCell,
+  pathFound: false,
+  visited: 0,
+  canSearch: function (dir) {
+    if (dir == "N")
+      return !maze.getCell(this.cell.pos.x, this.cell.pos.y).hasWall("N");
+    if (dir == "E")
+      return !maze.getCell(this.cell.pos.x, this.cell.pos.y).hasWall("E");
+    if (dir == "S")
+      return !maze.getCell(this.cell.pos.x, this.cell.pos.y).hasWall("S");
+    if (dir == "W")
+      return !maze.getCell(this.cell.pos.x, this.cell.pos.y).hasWall("W");
+  },
+  run: function () {
+    i = 0;
+    while (i < w * h) {
+      maze.cells[i].visited = false;
+      i++;
+    }
+    n = 0;
+    let lastCell = null;
+    while (!this.pathFound) {
+      console.log(`searching at ${this.cell.pos.x}, ${this.cell.pos.y}`);
+      if (n++ == w * h) break;
+      const unvisitedNeighbours = getNeighbours(this.cell, "unvisited").filter(
+        (n) => this.canSearch(n.direction)
+      );
+      console.log(unvisitedNeighbours, this.cell.pos);
+      if (unvisitedNeighbours.length) {
+        const random = randomDirection(
+          unvisitedNeighbours.map((n) => n.direction)
+        );
+        const nextCellInfo = unvisitedNeighbours.find(
+          (n) => n.direction === random
+        );
+        this.cell.visited = true;
+        this.stack.push(this.cell);
+        this.cell = nextCellInfo.cell;
+        this.visited++;
+        this.cell.colour = "lightblue";
+
+        if (
+          this.cell.pos.x == finishCell.pos.x &&
+          this.cell.pos.y == finishCell.pos.y
+        ) {
+          this.pathFound = true;
+        }
+        lastCell = null; // Reset lastCell because we found a new unvisited neighbor.
+      } else if (this.stack.length > 0) {
+        // Backtrack
+        lastCell = this.cell;
+        this.cell = this.stack.pop();
+      } else if (lastCell) {
+        // Backtrack to the last cell if possible
+        this.cell = lastCell;
+        lastCell = null;
+      }
+    }
+  },
+};
 
 player.pos = startCell.pos;
 
@@ -388,6 +453,8 @@ generate = () => {
   h = document.getElementById("height").value || 8;
   const algorithm = document.getElementById("algorithm").value;
 
+  document.getElementById("solve").removeAttribute("disabled");
+
   const cellSize = min(canvasWidth / w, canvasHeight / h);
 
   maze = createMaze(w, h);
@@ -397,6 +464,8 @@ generate = () => {
   finishCell = maze.randomCell(h - 1);
   finishCell.flags.push("FINISH");
   finishCell.colour = "#d95f5f";
+
+  solver.cell = startCell;
 
   resizeCanvas(w * cellSize, h * cellSize);
 

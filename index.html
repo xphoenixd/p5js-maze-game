@@ -19,9 +19,19 @@
         class="card card-body"
         style="margin-bottom: 20px; top: 0"
       >
-        <button id="generate" onclick="generate()" class="btn btn-primary">
-          Generate New Maze
-        </button>
+        <div class="d-flex justify-between gap-2">
+          <button id="generate" onclick="generate()" class="btn btn-primary">
+            Generate New Maze
+          </button>
+          <button
+            id="solve"
+            onclick="solver.run()"
+            class="btn btn-success btn-sm"
+            disabled
+          >
+            Solve Maze
+          </button>
+        </div>
         <div id="input-container" class="row">
           <div class="col">
             <label for="width" class="position-absolute">
