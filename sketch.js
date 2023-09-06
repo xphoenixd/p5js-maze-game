@@ -285,15 +285,44 @@ const ab = {
   },
 };
 
+const player = {
+  pos: { x: null, y: null },
+  colour: "#000",
+  canMove: function (dir) {
+    if (timerFinished) return false;
+    if (dir == "N") return !maze.getCell(this.pos.x, this.pos.y).hasWall("N");
+    if (dir == "E") return !maze.getCell(this.pos.x, this.pos.y).hasWall("E");
+    if (dir == "S") return !maze.getCell(this.pos.x, this.pos.y).hasWall("S");
+    if (dir == "W") return !maze.getCell(this.pos.x, this.pos.y).hasWall("W");
+  },
+  move: function (dir) {
+    if (this.canMove(dir)) {
+      if (dir == "N") return this.pos.y--;
+      if (dir == "E") return this.pos.x++;
+      if (dir == "S") return this.pos.y++;
+      if (dir == "W") return this.pos.x--;
+    }
+  },
+};
+
+let firstMove = false;
+let timerStarted = false;
+let timerFinished = false;
+let startTime;
+let endTime;
+let totalTime;
+
+let startCell = maze.randomCell(0);
+startCell.flags.push("START");
+startCell.colour = "#5fd963";
+let finishCell = maze.randomCell(h - 1);
+finishCell.flags.push("FINISH");
+finishCell.colour = "#d95f5f";
+
+player.pos = startCell.pos;
+
 setup = () => {
   createCanvas(canvasWidth, canvasHeight);
-
-  const startCell = maze.randomCell(0);
-  startCell.flags.push("START");
-  startCell.colour = "#5fd963";
-  const finishCell = maze.randomCell(h - 1);
-  finishCell.flags.push("FINISH");
-  finishCell.colour = "#d95f5f";
 };
 
 draw = () => {
@@ -301,16 +330,41 @@ draw = () => {
 
   const cellSize = min(width / w, height / h); // Use the minimum dimension
 
+  if (firstMove && !timerStarted) {
+    startTime = new Date();
+    timerStarted = true;
+  }
+  if (
+    player.pos.x == finishCell.pos.x &&
+    player.pos.y == finishCell.pos.y &&
+    !timerFinished
+  ) {
+    timerFinished = true;
+    endTime = new Date();
+  }
+  if (startTime && endTime) {
+    totalTime = (endTime - startTime) / 1000;
+  }
+
   for (let row = 0; row < h; row++) {
     for (let col = 0; col < w; col++) {
       const cell = maze.getCell(col, row);
       const x = col * cellSize;
       const y = row * cellSize;
+      const playerX = player.pos.x * cellSize;
+      const playerY = player.pos.y * cellSize;
+      const playerSizeDiff = cellSize / 2;
 
       fill(cell.colour);
       noStroke();
       rect(x, y, cellSize, cellSize);
       fill("black");
+      rect(
+        playerX + playerSizeDiff / 2,
+        playerY + playerSizeDiff / 2,
+        cellSize - playerSizeDiff,
+        cellSize - playerSizeDiff
+      );
       stroke(0);
       strokeWeight(1);
       if (cell.hasWall("N")) line(x, y, x + cellSize, y);
@@ -318,6 +372,14 @@ draw = () => {
       if (cell.hasWall("S")) line(x, y + cellSize, x + cellSize, y + cellSize);
       if (cell.hasWall("W")) line(x, y, x, y + cellSize);
     }
+  }
+  if (timerFinished) {
+    fill(255, 255, 255, 220);
+    rect(0, 0, width, height);
+    textAlign(CENTER);
+    textSize(40);
+    fill("black");
+    text(`${totalTime.toFixed(2)} seconds`, width / 2, height / 2);
   }
 };
 
@@ -329,10 +391,10 @@ generate = () => {
   const cellSize = min(canvasWidth / w, canvasHeight / h);
 
   maze = createMaze(w, h);
-  const startCell = maze.randomCell(0);
+  startCell = maze.randomCell(0);
   startCell.flags.push("START");
   startCell.colour = "#5fd963";
-  const finishCell = maze.randomCell(h - 1);
+  finishCell = maze.randomCell(h - 1);
   finishCell.flags.push("FINISH");
   finishCell.colour = "#d95f5f";
 
@@ -352,10 +414,17 @@ generate = () => {
     ab.visited = 1;
     ab.run();
   }
+  player.pos = startCell.pos;
 };
 
 keyPressed = () => {
   // p5
+  if (
+    !firstMove &&
+    [UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW].includes(keyCode)
+  ) {
+    firstMove = true;
+  }
   if (keyCode == UP_ARROW) player.move("N");
   if (keyCode == DOWN_ARROW) player.move("S");
   if (keyCode == LEFT_ARROW) player.move("W");
