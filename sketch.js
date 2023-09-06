@@ -32,22 +32,27 @@ const createCell = (x, y) => {
     },
     canCarve: function () {
       const out = [];
-       if (this.pos.y != 0 && !maze.getCell(this.pos.x, this.pos.y - 1).visited)
+      if (this.pos.y != 0 && !maze.getCell(this.pos.x, this.pos.y - 1).visited)
         out.push("N");
-      if (this.pos.x != w - 1 && !maze.getCell(this.pos.x + 1, this.pos.y).visited)
+      if (
+        this.pos.x != w - 1 &&
+        !maze.getCell(this.pos.x + 1, this.pos.y).visited
+      )
         out.push("E");
-      if (this.pos.y != h - 1 && !maze.getCell(this.pos.x, this.pos.y + 1).visited)
+      if (
+        this.pos.y != h - 1 &&
+        !maze.getCell(this.pos.x, this.pos.y + 1).visited
+      )
         out.push("S");
       if (this.pos.x != 0 && !maze.getCell(this.pos.x - 1, this.pos.y).visited)
         out.push("W");
       return out;
-  },
+    },
   };
   return cell;
 };
 
 createMaze = (w, h) => {
-  console.log(w, h);
   const cells = [];
   for (let row = 0; row < h; row++) {
     for (let col = 0; col < w; col++) {
@@ -91,116 +96,135 @@ const randomDirection = (possible) => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getNeighbours = (cell, filter) => {
+  let dirs = cell.possibleDirections();
+  let possibleNeighbours = [];
 
-    let dirs = cell.possibleDirections();
-    let possibleNeighbours = [];
+  for (let i = 0; i < dirs.length; i++) {
+    const possible = dirs[i];
+    let nextX = cell.pos.x;
+    let nextY = cell.pos.y;
 
-    for(let i = 0; i < dirs.length; i++) {
-      const possible = dirs[i];
-      let nextX = cell.x;
-      let nextY = cell.y;
-
-      if (possible === "N") {
-        nextY -= 1;
-      } else if (possible === "E") {
-        nextX += 1;
-      } else if (possible === "S") {
-        nextY += 1;
-      } else if (possible === "W") {
-        nextX -= 1;
-      }
-      const possibleNeighbour = maze.getCell(nextX, nextY);
-      possibleNeighbours.push({
-        direction: possible,
-        cell: possibleNeighbour
-      });
+    if (possible === "N") {
+      nextY -= 1;
+    } else if (possible === "E") {
+      nextX += 1;
+    } else if (possible === "S") {
+      nextY += 1;
+    } else if (possible === "W") {
+      nextX -= 1;
     }
-    return possibleNeighbours;
-
-}
+    const possibleNeighbour = maze.getCell(nextX, nextY);
+    possibleNeighbours.push({
+      direction: possible,
+      cell: possibleNeighbour,
+    });
+  }
+  let filtered;
+  if (filter == "visited")
+    filtered = possibleNeighbours.filter((n) => n.cell.visited);
+  if (filter == "unvisited")
+    filtered = possibleNeighbours.filter((n) => !n.cell.visited);
+  return filter ? filtered : possibleNeighbours;
+};
 
 const huntAndKill = {
   lastRowCompletelyVisited: 0,
   carve: function (cell) {
-    console.log(`carving ${cell.pos.x}, ${cell.pos.y}`)
     const dir = randomDirection(cell.canCarve());
     let nextPos = { x: cell.pos.x, y: cell.pos.y };
-    if(dir && dir.length) {
-      if(dir == "N") {
+    if (dir && dir.length) {
+      if (dir == "N") {
         nextPos.y -= 1;
       }
-      if(dir == "E") {
+      if (dir == "E") {
         nextPos.x += 1;
       }
-      if(dir == "S") {
+      if (dir == "S") {
         nextPos.y += 1;
       }
-      if(dir == "W") {
+      if (dir == "W") {
         nextPos.x -= 1;
       }
       let nextCell = maze.getCell(nextPos.x, nextPos.y);
       nextCell.visited = true;
       cell.visited = true;
       maze.connectCells(cell, nextCell, dir);
-      if(nextCell.canCarve().length) {
+      if (nextCell.canCarve().length) {
         this.carve(nextCell);
       } else {
-        this.hunt(0, this.lastRowCompletelyVisited)
+        this.hunt(0, this.lastRowCompletelyVisited);
       }
     }
   },
   hunt: async function (x, y) {
-    console.log(`hunting at ${x}, ${y}`);
     const cell = maze.getCell(x, y);
-    if(x === w-1 && cell.visited) lastRowCompletelyVisited = y;
-    if(x === w-1 && y === h-1 && cell.visited) return console.log('Maze finished');
-    if(y > 1 && y % 2 === 0 && x == w-1) await sleep(5);
-    
-    let nextHuntX = x+1;
+    if (x === w - 1 && cell.visited) lastRowCompletelyVisited = y;
+    if (x === w - 1 && y === h - 1 && cell.visited)
+      return console.log("Maze finished");
+    if (y > 1 && y % 2 === 0 && x == w - 1) await sleep(1);
+
+    let nextHuntX = x + 1;
     let nextHuntY = y;
 
-    if(x === w - 1) {
+    if (x === w - 1) {
       nextHuntX = 0;
       nextHuntY += 1;
-      console.log(`reached end of row ${y}, moving onto next row ${nextHuntY}`);
     }
-    if(cell.visited) return this.hunt(nextHuntX, nextHuntY);
+    if (cell.visited) return this.hunt(nextHuntX, nextHuntY);
 
-      const possibleNeighbours = getNeighbours(cell);
-    console.log(possibleNeighbours);
-      
-      const visitedPossibleNeighbours = possibleNeighbours.filter((n) => n.cell.visited);
-      if(visitedPossibleNeighbours.length) {
+    const possibleNeighbours = getNeighbours(cell);
+
+    const visitedPossibleNeighbours = possibleNeighbours.filter(
+      (n) => n.cell.visited
+    );
+    if (visitedPossibleNeighbours.length) {
       const nextNeighbour = visitedPossibleNeighbours[0];
       const nextDirection = nextNeighbour.direction;
 
       nextNeighbour.cell.visited = true;
       maze.connectCells(cell, nextNeighbour.cell, nextDirection);
       this.carve(nextNeighbour.cell);
-
-
-      } else return this.hunt(nextHuntX, nextHuntY);
-  } 
-}
-
+    } else return this.hunt(nextHuntX, nextHuntY);
+  },
+};
+let maze = createMaze(w, h);
 
 const dfs = {
   stack: [],
-  visited: 1,
+  visited: 0,
+  cell: maze.getCell(0, 0),
   run: function () {
-    while(this.visited < w*h+1) {
-      console.log("balls");
-      this.visited++
-  }
+    while (this.visited < w * h) {
+      this.cell.visited = true;
+      const unvisitedNeighbours = getNeighbours(this.cell, "unvisited");
+      if (unvisitedNeighbours.length) {
+        const random = randomDirection(
+          unvisitedNeighbours.map((n) => n.direction)
+        );
+        const randomCellInfo = unvisitedNeighbours.find(
+          (n) => n.direction === random
+        );
+        if (randomCellInfo) {
+          const randomCell = randomCellInfo.cell;
+          maze.connectCells(this.cell, randomCell, randomCellInfo.direction);
+          this.stack.push(this.cell);
+          this.cell = randomCell; // Move to the random neighboring cell.
+          this.visited++;
+        }
+      } else {
+        if (this.stack.length === 0) {
+          // You've visited all cells and the stack is empty, exit the loop.
+          break;
+        }
+        this.cell = this.stack.pop(); // Backtrack to the previous cell.
+      }
+    }
+  },
+};
 
-}
-}
-
-let maze;
 setup = () => {
   createCanvas(canvasWidth, canvasHeight);
 
-  maze = createMaze(w, h);
   const startCell = maze.randomCell(0);
   startCell.flags.push("START");
   startCell.colour = "#5fd963";
@@ -237,13 +261,9 @@ draw = () => {
 generate = () => {
   w = document.getElementById("width").value || 8;
   h = document.getElementById("height").value || 8;
-  const algorithm = document.getElementById("algorithm").value
-
-
+  const algorithm = document.getElementById("algorithm").value;
 
   const cellSize = min(canvasWidth / w, canvasHeight / h);
-
-  console.log(`generated new maze, ${h}, ${w}`);
 
   maze = createMaze(w, h);
   const startCell = maze.randomCell(0);
@@ -253,15 +273,18 @@ generate = () => {
   finishCell.flags.push("FINISH");
   finishCell.colour = "#d95f5f";
 
-  resizeCanvas(w*cellSize, h*cellSize);
+  resizeCanvas(w * cellSize, h * cellSize);
 
-  if(algorithm === "huntandkill") {
-    huntAndKill.carve(startCell)
-  } else if(algorithm === "dfs") {
+  if (algorithm === "huntandkill") {
+    huntAndKill.carve(startCell);
+  } else if (algorithm === "dfs") {
+    dfs.stack = [];
+    dfs.visited = 0;
+    dfs.cell = maze.getCell(0, 0);
     dfs.run();
-    console.log(getNeighbours(startCell))
+  } else if (algorithm === "prims") {
+    prims.run();
   }
-
 };
 
 keyPressed = () => {

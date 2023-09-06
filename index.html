@@ -14,25 +14,30 @@
   </head>
   <body>
     <main>
-      <div id="controls" class="card card-body" style="margin-bottom: 20px; top:0;">
+      <div
+        id="controls"
+        class="card card-body"
+        style="margin-bottom: 20px; top: 0"
+      >
         <button id="generate" onclick="generate()" class="btn btn-primary">
           Generate New Maze
         </button>
         <div id="input-container" class="row">
           <div class="col">
-            <label
-              for="width"
-              class="position-absolute"
-            >
+            <label for="width" class="position-absolute">
               <span class="h6 small bg-white text-muted px-1">Maze Width</span>
             </label>
-            <input type="number" id="width" class="form-control mt-4" value="8" max="50" onkeyup="if(this.value > 50) this.value = 50;" />
+            <input
+              type="number"
+              id="width"
+              class="form-control mt-4"
+              value="8"
+              max="50"
+              onkeyup="if(this.value > 50) this.value = 50;"
+            />
           </div>
           <div class="col">
-            <label
-              for="height"
-              class="position-absolute"
-            >
+            <label for="height" class="position-absolute">
               <span class="h6 small bg-white text-muted px-1">Maze Height</span>
             </label>
             <input
@@ -41,18 +46,20 @@
               class="form-control mt-4"
               value="8"
               max="50"
-              onkeyup="if(this.value > 50) this.value = 50;" 
+              onkeyup="if(this.value > 50) this.value = 50;"
             />
           </div>
         </div>
         <div class="form-group">
           <label for="algorithm">
-            <span class="h6 small bg-white text-muted px-1">Maze Generation Algorithm</span>
+            <span class="h6 small bg-white text-muted px-1"
+              >Maze Generation Algorithm</span
+            >
           </label>
           <select id="algorithm" class="form-select">
             <option value="huntandkill">Hunt-and-Kill</option>
             <option value="dfs">Depth-First-Search</option>
-            <option value="kruskal">Kruskal's Algorithm</option>
+            <option value="prims">Randomised Prim's</option>
           </select>
         </div>
       </div>
