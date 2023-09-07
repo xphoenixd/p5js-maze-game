@@ -91,8 +91,8 @@ createMaze = (w, h) => {
   return maze;
 };
 
-const randomDirection = (possible) => {
-  return possible[Math.floor(Math.random() * possible.length)];
+const randomInArray = (array) => {
+  return array[Math.floor(Math.random() * array.length)];
 };
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -132,7 +132,7 @@ const huntAndKill = {
   lastRowCompletelyVisited: 0,
   carve: function (cell) {
     let dir;
-    while ((dir = randomDirection(cell.canCarve()))) {
+    while ((dir = randomInArray(cell.canCarve()))) {
       let nextPos = { x: cell.pos.x, y: cell.pos.y };
       if (dir === "N") nextPos.y -= 1;
       if (dir === "E") nextPos.x += 1;
@@ -211,7 +211,7 @@ const dfs = {
       this.cell.visited = true;
       const unvisitedNeighbours = getNeighbours(this.cell, "unvisited");
       if (unvisitedNeighbours.length) {
-        const random = randomDirection(
+        const random = randomInArray(
           unvisitedNeighbours.map((n) => n.direction)
         );
         const randomCellInfo = unvisitedNeighbours.find(
@@ -274,7 +274,7 @@ const ab = {
   visited: 1,
   run: async function () {
     while (this.visited < w * h - 1) {
-      const neighbour = randomDirection(getNeighbours(this.cell));
+      const neighbour = randomInArray(getNeighbours(this.cell));
       if (!neighbour.cell.visited) {
         maze.connectCells(this.cell, neighbour.cell, neighbour.direction);
         neighbour.cell.visited = true;
@@ -322,7 +322,7 @@ finishCell.visited = true;
 finishCell.colour = "#d95f5f";
 
 const solver = {
-  stack: [],
+  stack: [startCell],
   cell: startCell,
   pathFound: false,
   visited: 0,
@@ -337,51 +337,29 @@ const solver = {
       return !maze.getCell(this.cell.pos.x, this.cell.pos.y).hasWall("W");
   },
   run: function () {
-    i = 0;
-    while (i < w * h) {
-      maze.cells[i].visited = false;
-      i++;
-    }
+    maze.cells.forEach((cell) => cell.visited = false);
     n = 0;
-    let lastCell = null;
     while (!this.pathFound) {
-      console.log(`searching at ${this.cell.pos.x}, ${this.cell.pos.y}`);
-      if (n++ == w * h) break;
+      this.cell = this.stack[this.stack.length - 1]
+      if(this.cell.pos.x == finishCell.pos.x && this.cell.pos.y == finishCell.pos.y) {this.pathFound = true; return this.setPathColour();}
       const unvisitedNeighbours = getNeighbours(this.cell, "unvisited").filter(
         (n) => this.canSearch(n.direction)
       );
-      console.log(unvisitedNeighbours, this.cell.pos);
-      if (unvisitedNeighbours.length) {
-        const random = randomDirection(
-          unvisitedNeighbours.map((n) => n.direction)
-        );
-        const nextCellInfo = unvisitedNeighbours.find(
-          (n) => n.direction === random
-        );
-        this.cell.visited = true;
-        this.stack.push(this.cell);
-        this.cell = nextCellInfo.cell;
-        this.visited++;
-        this.cell.colour = "lightblue";
-
-        if (
-          this.cell.pos.x == finishCell.pos.x &&
-          this.cell.pos.y == finishCell.pos.y
-        ) {
-          this.pathFound = true;
-        }
-        lastCell = null; // Reset lastCell because we found a new unvisited neighbor.
-      } else if (this.stack.length > 0) {
-        // Backtrack
-        lastCell = this.cell;
-        this.cell = this.stack.pop();
-      } else if (lastCell) {
-        // Backtrack to the last cell if possible
-        this.cell = lastCell;
-        lastCell = null;
+      if(unvisitedNeighbours.length) {
+        const randomNeighbour = randomInArray(unvisitedNeighbours)
+        randomNeighbour.cell.visited = true;
+        this.stack.push(randomNeighbour.cell);
+      } else {
+        this.stack.pop();
       }
+
     }
   },
+  setPathColour: function() {
+    this.stack.forEach((c, i) => {
+      if(i && i != this.stack.length - 1) c.colour = "lightblue";
+    })
+  }
 };
 
 player.pos = startCell.pos;
@@ -466,6 +444,8 @@ generate = () => {
   finishCell.colour = "#d95f5f";
 
   solver.cell = startCell;
+  solver.stack = [startCell];
+  solver.pathFound = false;
 
   resizeCanvas(w * cellSize, h * cellSize);
 
