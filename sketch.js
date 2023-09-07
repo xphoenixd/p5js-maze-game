@@ -6,6 +6,8 @@ let canvasHeight = 600;
 const oppositeDir = { N: "S", E: "W", S: "N", W: "E" };
 
 const defaultCellColour = "#fff";
+const startColour = "#ffff00";
+const finishColour = "#ff00ff";
 
 const createCell = (x, y) => {
   const walls = ["N", "E", "S", "W"];
@@ -169,8 +171,6 @@ const huntAndKill = {
       let cell = maze.getCell(x, y);
       if (x === w - 1 && y === h - 1) return;
 
-      // if (y > 1 && y % 2 === 0 && x == w - 1) await sleep(1);
-
       let nextHuntX = x + 1;
       let nextHuntY = y;
 
@@ -227,6 +227,14 @@ const dfs = {
       } else {
         if (this.stack.length === 0) {
           // You've visited all cells and the stack is empty, exit the loop.
+          generationTimerFinished = true;
+          generationEndTime = new Date();
+
+          console.log(generationStartTime);
+          if (generationStartTime && generationEndTime) {
+            generationTime = (generationEndTime - generationStartTime) / 1000;
+            console.log(generationTime)
+          }  
           break;
         }
         this.cell = this.stack.pop(); // Backtrack to the previous cell.
@@ -253,6 +261,7 @@ const prims = {
 
     this.addWalls(startCell);
 
+    let done = false;
     while (this.walls.length) {
       const randomIndex = Math.floor(Math.random() * this.walls.length);
       const randomWall = this.walls[randomIndex];
@@ -263,9 +272,14 @@ const prims = {
         maze.connectCells(cell, neighbor, direction);
         this.addWalls(neighbor);
       }
+      if(cell.visited) this.walls.pop();
 
       this.walls.splice(randomIndex, 1);
+      
+
+
     }
+    console.log(done)
   },
 };
 
@@ -282,6 +296,31 @@ const ab = {
       }
       this.cell = neighbour.cell;
     }
+  },
+};
+
+const sidewinder = {
+  stack: [],
+  run: function () {
+    maze.cells.forEach((cell) => {
+      this.stack.push(cell);
+
+      const atEasternBoundary = cell.pos.x === w - 1;
+      const atNorthernBoundary = cell.pos.y === 0;
+      const shouldCloseOut = atEasternBoundary || (!atNorthernBoundary && Math.random() < 0.5);
+
+      if (shouldCloseOut) {
+        const member = randomInArray(this.stack);
+        if (member && member.pos.y) {
+          maze.connectCells(member, maze.getCell(member.pos.x, member.pos.y-1), "N");
+        }
+        this.stack = [];
+      } else {
+        if (!atEasternBoundary) {
+          maze.connectCells(cell, maze.getCell(cell.pos.x+1, cell.pos.y), "E")
+        }
+      }
+    })
   },
 };
 
@@ -312,14 +351,20 @@ let startTime;
 let endTime;
 let totalTime;
 
+let generationTimerStarted = false;
+let generationTimerFinished = false;
+let generationStartTime;
+let generationEndTime;
+let generationTime;
+
 let startCell = maze.randomCell(0);
 startCell.flags.push("START");
 startCell.visited = true;
-startCell.colour = "#5fd963";
+startCell.colour = finishColour;
 let finishCell = maze.randomCell(h - 1);
 finishCell.flags.push("FINISH");
 finishCell.visited = true;
-finishCell.colour = "#d95f5f";
+finishCell.colour = startColour;
 
 const solver = {
   stack: [startCell],
@@ -356,8 +401,9 @@ const solver = {
     }
   },
   setPathColour: function() {
+    const gradient = new Gradient().setColorGradient(startColour, finishColour).setMidpoint(this.stack.length+1).getColors();
     this.stack.forEach((c, i) => {
-      if(i && i != this.stack.length - 1) c.colour = "lightblue";
+      if(i && i != this.stack.length - 1) c.colour = gradient[i];
     })
   }
 };
@@ -427,6 +473,10 @@ draw = () => {
 };
 
 generate = () => {
+
+  generationTimerStarted = true;
+  generationStartTime = new Date();
+
   w = document.getElementById("width").value || 8;
   h = document.getElementById("height").value || 8;
   const algorithm = document.getElementById("algorithm").value;
@@ -438,10 +488,10 @@ generate = () => {
   maze = createMaze(w, h);
   startCell = maze.randomCell(0);
   startCell.flags.push("START");
-  startCell.colour = "#5fd963";
+  startCell.colour = finishColour;
   finishCell = maze.randomCell(h - 1);
   finishCell.flags.push("FINISH");
-  finishCell.colour = "#d95f5f";
+  finishCell.colour = startColour;
 
   solver.cell = startCell;
   solver.stack = [startCell];
@@ -462,6 +512,8 @@ generate = () => {
     ab.cell = maze.randomCell();
     ab.visited = 1;
     ab.run();
+  } else if (algorithm === "sidewinder") {
+    sidewinder.run(); // Use Sidewinder algorithm
   }
   player.pos = startCell.pos;
   firstMove = false;

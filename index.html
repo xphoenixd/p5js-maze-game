@@ -3,6 +3,7 @@
   <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
+    <script src="javascript-color-gradient.js"></script>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -26,7 +27,7 @@
           <button
             id="solve"
             onclick="solver.run()"
-            class="btn btn-success btn-sm"
+            class="btn btn-success"
             disabled
           >
             Solve Maze
@@ -42,8 +43,8 @@
               id="width"
               class="form-control mt-4"
               value="15"
-              max="100"
-              onkeyup="if(this.value > 100) this.value = 100;"
+              max="300"
+              onkeyup="if(this.value > 300) this.value = 300;"
             />
           </div>
           <div class="col">
@@ -55,8 +56,8 @@
               id="height"
               class="form-control mt-4"
               value="15"
-              max="100"
-              onkeyup="if(this.value > 100) this.value = 100;"
+              max="300"
+              onkeyup="if(this.value > 300) this.value = 300;"
             />
           </div>
         </div>
@@ -71,6 +72,7 @@
             <option value="dfs">Depth-First-Search</option>
             <option value="prims">Randomised Prim's</option>
             <option value="ab">Aldous-Broder</option>
+            <option value="sidewinder">Sidewinder</option>
           </select>
         </div>
       </div>
